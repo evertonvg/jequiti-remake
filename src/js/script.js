@@ -20,6 +20,7 @@ class HypnosisBall {
     normalEasterEggSrc,
     horrorEasterEggSrc,
     keyMashSrc,
+    horrorKeyMashSrc,
     maxFlashDelayMs = 30000,
     flashDurationMs = 80,
     rickrollChance = 0.1,
@@ -45,6 +46,7 @@ class HypnosisBall {
     this.normalEasterEggSrc = normalEasterEggSrc;
     this.horrorEasterEggSrc = horrorEasterEggSrc;
     this.keyMashSrc = keyMashSrc;
+    this.horrorKeyMashSrc = horrorKeyMashSrc;
     this.maxFlashDelayMs = maxFlashDelayMs;
     this.flashDurationMs = flashDurationMs;
     this.rickrollChance = rickrollChance;
@@ -148,13 +150,21 @@ class HypnosisBall {
     this.keyMashActive = true;
     this.blackout.classList.add('hypnosis__blackout--active');
 
+    const isHorrorVideo = this.horror;
+    if (isHorrorVideo) {
+      this.audio.pause();
+    }
+
     const onFadeEnd = (event) => {
       if (event.propertyName !== 'opacity' || event.target !== this.blackout) return;
       this.blackout.removeEventListener('transitionend', onFadeEnd);
 
-      this.playFullscreenVideo(this.keyMashSrc).then(() => {
+      this.playFullscreenVideo(isHorrorVideo ? this.horrorKeyMashSrc : this.keyMashSrc).then(() => {
         this.blackout.classList.remove('hypnosis__blackout--active');
         this.keyMashActive = false;
+        if (isHorrorVideo) {
+          this.audio.play().catch(() => {});
+        }
       });
     };
     this.blackout.addEventListener('transitionend', onFadeEnd);
@@ -252,5 +262,6 @@ document.addEventListener('DOMContentLoaded', () => {
     normalEasterEggSrc: 'src/video/ronaldinhosoccer.mp4',
     horrorEasterEggSrc: 'src/video/illuminatti.mp4',
     keyMashSrc: 'src/video/skyrim.mp4',
+    horrorKeyMashSrc: 'src/video/jeff.mp4',
   }).start();
 });
