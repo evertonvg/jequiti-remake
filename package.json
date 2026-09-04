@@ -1,0 +1,29 @@
+{
+  "name": "jequiti-remake",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed"
+  },
+  "dependencies": {
+    "@astrojs/alpinejs": "^1.0.0",
+    "alpinejs": "^3.17.1",
+    "astro": "^7.3.1",
+    "disable-devtool": "^0.3.9"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@playwright/test": "^1.62.1",
+    "@types/alpinejs": "^3.13.11",
+    "@types/node": "^26.4.1",
+    "typescript": "^6.0.3"
+  }
+}

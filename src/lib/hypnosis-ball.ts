@@ -1,3 +1,5 @@
+import { DvdScreensaver } from './dvd-screensaver';
+
 const KONAMI_SEQUENCE = [
   'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
   'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
@@ -6,88 +8,115 @@ const KONAMI_SEQUENCE = [
 
 const SECRET_WORD = 'jequiti';
 
-class DvdScreensaver {
-  constructor(canvasEl, { logoWidth = 120, logoHeight = 60, speed = 3 } = {}) {
-    this.canvas = canvasEl;
-    this.ctx = this.canvas.getContext('2d');
-    this.logoWidth = logoWidth;
-    this.logoHeight = logoHeight;
-    this.speed = speed;
-    this.rafId = null;
-  }
+export interface SecretTerminalToggleDetail {
+  active: boolean;
+}
 
-  start() {
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
-
-    this.x = Math.random() * (this.canvas.width - this.logoWidth);
-    this.y = Math.random() * (this.canvas.height - this.logoHeight);
-    this.speedX = this.speed;
-    this.speedY = this.speed;
-    this.hue = 0;
-    this.color = this.nextColor();
-
-    this.loop();
-  }
-
-  stop() {
-    if (this.rafId !== null) {
-      cancelAnimationFrame(this.rafId);
-      this.rafId = null;
-    }
-  }
-
-  nextColor() {
-    this.hue = (this.hue + 60) % 360;
-    return `hsl(${this.hue}, 100%, 50%)`;
-  }
-
-  drawLogo(px, py, color) {
-    const ctx = this.ctx;
-    ctx.fillStyle = color;
-    ctx.font = 'bold 38px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('DVD', px + this.logoWidth / 2, py + this.logoHeight / 2 - 6);
-
-    ctx.beginPath();
-    ctx.ellipse(px + this.logoWidth / 2, py + this.logoHeight - 10, this.logoWidth / 2.2, 8, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#000';
-    ctx.beginPath();
-    ctx.ellipse(px + this.logoWidth / 2, py + this.logoHeight - 10, this.logoWidth / 3.5, 4, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  loop() {
-    const ctx = this.ctx;
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-    this.x += this.speedX;
-    this.y += this.speedY;
-
-    let hit = false;
-    if (this.x + this.logoWidth >= this.canvas.width || this.x <= 0) {
-      this.speedX = -this.speedX;
-      hit = true;
-    }
-    if (this.y + this.logoHeight >= this.canvas.height || this.y <= 0) {
-      this.speedY = -this.speedY;
-      hit = true;
-    }
-    if (hit) {
-      this.color = this.nextColor();
-    }
-
-    this.drawLogo(this.x, this.y, this.color);
-
-    this.rafId = requestAnimationFrame(() => this.loop());
+declare global {
+  interface WindowEventMap {
+    'hypnosis:secret-word': CustomEvent<void>;
+    'secret-terminal:toggle': CustomEvent<SecretTerminalToggleDetail>;
   }
 }
 
-class HypnosisBall {
+export interface HypnosisBallOptions {
+  ballEl: HTMLImageElement;
+  flashEl: HTMLElement;
+  flashImageEl: HTMLImageElement;
+  overlayEl: HTMLElement;
+  audioEl: HTMLAudioElement;
+  angelicalOverlayEl: HTMLElement;
+  angelicalAudioEl: HTMLAudioElement;
+  rickrollEl: HTMLVideoElement;
+  easterEggEl: HTMLVideoElement;
+  easterEggFilterEl: HTMLElement;
+  blackoutEl: HTMLElement;
+  idleCanvasEl: HTMLCanvasElement;
+  normalImages: string[];
+  horrorImages: string[];
+  heavenImages: string[];
+  normalEasterEggSrc: string;
+  horrorEasterEggSrc: string;
+  angelicalEasterEggSrc: string;
+  keyMashSrc: string;
+  horrorKeyMashSrc: string;
+  angelicalKeyMashSrc: string;
+  maxFlashDelayMs?: number;
+  flashDurationMs?: number;
+  rickrollChance?: number;
+  rickrollRevealMs?: number;
+  normalSpeedDeg?: number;
+  transitionMs?: number;
+  maxOverlayOpacity?: number;
+  maxVolume?: number;
+  maxAngelicalOverlayOpacity?: number;
+  maxAngelicalVolume?: number;
+  keyMashThreshold?: number;
+  keyMashWindowMs?: number;
+  idleMs?: number;
+  doubleClickWindowMs?: number;
+}
+
+export class HypnosisBall {
+  private readonly ball: HTMLImageElement;
+  private readonly flash: HTMLElement;
+  private readonly flashImage: HTMLImageElement;
+  private readonly overlay: HTMLElement;
+  private readonly audio: HTMLAudioElement;
+  private readonly angelicalOverlay: HTMLElement;
+  private readonly angelicalAudio: HTMLAudioElement;
+  private readonly rickroll: HTMLVideoElement;
+  private readonly easterEgg: HTMLVideoElement;
+  private readonly easterEggFilter: HTMLElement;
+  private readonly blackout: HTMLElement;
+  private readonly idleCanvas: HTMLCanvasElement;
+  private readonly idleScreensaver: DvdScreensaver;
+
+  private readonly normalImages: string[];
+  private readonly horrorImages: string[];
+  private readonly heavenImages: string[];
+  private readonly normalEasterEggSrc: string;
+  private readonly horrorEasterEggSrc: string;
+  private readonly angelicalEasterEggSrc: string;
+  private readonly keyMashSrc: string;
+  private readonly horrorKeyMashSrc: string;
+  private readonly angelicalKeyMashSrc: string;
+
+  private readonly maxFlashDelayMs: number;
+  private readonly flashDurationMs: number;
+  private readonly rickrollChance: number;
+  private readonly rickrollRevealMs: number;
+  private readonly normalSpeedDeg: number;
+  private readonly transitionMs: number;
+  private readonly maxOverlayOpacity: number;
+  private readonly maxVolume: number;
+  private readonly maxAngelicalOverlayOpacity: number;
+  private readonly maxAngelicalVolume: number;
+  private readonly keyMashThreshold: number;
+  private readonly keyMashWindowMs: number;
+  private readonly idleMs: number;
+  private readonly doubleClickWindowMs: number;
+
+  private angle = 0;
+  private transition = 0;
+  private target = 0;
+  private horror = false;
+  private angelicalTransition = 0;
+  private angelicalTarget = 0;
+  private angelical = false;
+  private lastFrameTime: number | null = null;
+  private easterEggActive = false;
+  private keyMashActive = false;
+  private idleActive = false;
+  private idleSirenWasPlaying = false;
+  private konamiBuffer: string[] = [];
+  private secretWordBuffer = '';
+  private secretTerminalActive = false;
+  private keyMashTimestamps: number[] = [];
+  private idleTimeoutId: ReturnType<typeof setTimeout> | undefined;
+  private pendingClickTimeoutId: ReturnType<typeof setTimeout> | undefined;
+  private clickCount = 0;
+
   constructor({
     ballEl,
     flashEl,
@@ -101,9 +130,6 @@ class HypnosisBall {
     easterEggFilterEl,
     blackoutEl,
     idleCanvasEl,
-    secretTerminalEl,
-    secretTerminalOutputEl,
-    secretTerminalInputEl,
     normalImages,
     horrorImages,
     heavenImages,
@@ -125,9 +151,9 @@ class HypnosisBall {
     maxAngelicalVolume = 0.7,
     keyMashThreshold = 20,
     keyMashWindowMs = 5000,
-    idleMs = 120000,
+    idleMs = 42000,
     doubleClickWindowMs = 250,
-  }) {
+  }: HypnosisBallOptions) {
     this.ball = ballEl;
     this.flash = flashEl;
     this.flashImage = flashImageEl;
@@ -141,9 +167,6 @@ class HypnosisBall {
     this.blackout = blackoutEl;
     this.idleCanvas = idleCanvasEl;
     this.idleScreensaver = new DvdScreensaver(idleCanvasEl);
-    this.secretTerminal = secretTerminalEl;
-    this.secretTerminalOutput = secretTerminalOutputEl;
-    this.secretTerminalInput = secretTerminalInputEl;
     this.normalImages = normalImages;
     this.horrorImages = horrorImages;
     this.heavenImages = heavenImages;
@@ -167,58 +190,36 @@ class HypnosisBall {
     this.keyMashWindowMs = keyMashWindowMs;
     this.idleMs = idleMs;
     this.doubleClickWindowMs = doubleClickWindowMs;
-
-    this.angle = 0;
-    this.transition = 0;
-    this.target = 0;
-    this.horror = false;
-    this.angelicalTransition = 0;
-    this.angelicalTarget = 0;
-    this.angelical = false;
-    this.lastFrameTime = null;
-    this.easterEggActive = false;
-    this.keyMashActive = false;
-    this.idleActive = false;
-    this.idleSirenWasPlaying = false;
-    this.konamiBuffer = [];
-    this.secretWordBuffer = '';
-    this.secretTerminalActive = false;
-    this.keyMashTimestamps = [];
-    this.idleTimeoutId = null;
-    this.pendingClickTimeoutId = null;
-    this.clickCount = 0;
   }
 
-  start() {
+  start(): void {
     document.addEventListener('click', () => this.onClick());
     document.addEventListener('keydown', (event) => this.onKeydown(event));
 
-    ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'].forEach((type) => {
+    (['mousemove', 'keydown', 'click', 'touchstart', 'scroll'] as const).forEach((type) => {
       document.addEventListener(type, () => this.resetIdleTimer());
+    });
+
+    window.addEventListener('secret-terminal:toggle', (event) => {
+      this.secretTerminalActive = event.detail.active;
+      if (!this.secretTerminalActive) {
+        this.resetIdleTimer();
+      }
     });
 
     this.rickroll.muted = true;
     this.rickroll.play().catch(() => {});
-
-    this.secretTerminalInput.addEventListener('keydown', (event) => {
-      event.stopPropagation();
-      if (event.key === 'Enter') {
-        this.submitSecretTerminalAnswer();
-      } else if (event.key === 'Escape') {
-        this.closeSecretTerminal();
-      }
-    });
 
     this.scheduleNextFlash();
     this.resetIdleTimer();
     requestAnimationFrame((time) => this.tick(time));
   }
 
-  isInteractionSuspended() {
+  private isInteractionSuspended(): boolean {
     return this.easterEggActive || this.keyMashActive || this.idleActive || this.secretTerminalActive;
   }
 
-  onClick() {
+  private onClick(): void {
     if (this.isInteractionSuspended()) return;
 
     this.clickCount += 1;
@@ -235,7 +236,7 @@ class HypnosisBall {
     }
   }
 
-  onKeydown(event) {
+  private onKeydown(event: KeyboardEvent): void {
     if (this.idleActive) {
       this.dismissIdleEffect();
       return;
@@ -253,7 +254,8 @@ class HypnosisBall {
     if (event.key.length === 1) {
       this.secretWordBuffer = (this.secretWordBuffer + event.key.toLowerCase()).slice(-SECRET_WORD.length);
       if (this.secretWordBuffer === SECRET_WORD) {
-        this.openSecretTerminal();
+        this.secretWordBuffer = '';
+        window.dispatchEvent(new CustomEvent('hypnosis:secret-word'));
         return;
       }
     }
@@ -261,43 +263,13 @@ class HypnosisBall {
     this.trackKeyMash();
   }
 
-  openSecretTerminal() {
-    this.secretTerminalActive = true;
-    this.secretWordBuffer = '';
-    this.secretTerminalOutput.textContent = 'What is the meaning of life?';
-    this.secretTerminalInput.value = '';
-    this.secretTerminal.classList.add('secret-terminal--active');
-    requestAnimationFrame(() => this.secretTerminalInput.focus());
-  }
-
-  closeSecretTerminal() {
-    this.secretTerminalActive = false;
-    this.secretTerminal.classList.remove('secret-terminal--active');
-    this.secretTerminalInput.blur();
-    this.resetIdleTimer();
-  }
-
-  submitSecretTerminalAnswer() {
-    const answer = this.secretTerminalInput.value.trim();
-    if (!answer) return;
-
-    this.secretTerminalOutput.textContent += `\n> ${answer}`;
-    this.secretTerminalInput.value = '';
-
-    try {
-      localStorage.setItem('jequitiTreasureStep1Answer', answer);
-    } catch {
-      // localStorage indisponível (ex: modo privado) — segue sem persistir.
-    }
-  }
-
-  resetIdleTimer() {
+  private resetIdleTimer(): void {
     clearTimeout(this.idleTimeoutId);
     if (this.isInteractionSuspended()) return;
     this.idleTimeoutId = setTimeout(() => this.triggerIdleEffect(), this.idleMs);
   }
 
-  triggerIdleEffect() {
+  private triggerIdleEffect(): void {
     if (this.isInteractionSuspended()) return;
     this.idleActive = true;
 
@@ -308,7 +280,7 @@ class HypnosisBall {
     this.idleScreensaver.start();
   }
 
-  dismissIdleEffect() {
+  private dismissIdleEffect(): void {
     this.idleActive = false;
 
     this.idleScreensaver.stop();
@@ -321,7 +293,7 @@ class HypnosisBall {
     this.resetIdleTimer();
   }
 
-  trackKeyMash() {
+  private trackKeyMash(): void {
     const now = performance.now();
     this.keyMashTimestamps.push(now);
     this.keyMashTimestamps = this.keyMashTimestamps.filter((t) => now - t <= this.keyMashWindowMs);
@@ -332,7 +304,7 @@ class HypnosisBall {
     }
   }
 
-  playFullscreenVideo(src) {
+  private playFullscreenVideo(src: string): Promise<void> {
     return new Promise((resolve) => {
       this.easterEgg.src = src;
       this.easterEgg.currentTime = 0;
@@ -350,7 +322,7 @@ class HypnosisBall {
     });
   }
 
-  triggerEasterEgg() {
+  private triggerEasterEgg(): void {
     if (this.isInteractionSuspended()) return;
     this.easterEggActive = true;
 
@@ -378,7 +350,7 @@ class HypnosisBall {
     });
   }
 
-  triggerKeyMashEffect() {
+  private triggerKeyMashEffect(): void {
     if (this.isInteractionSuspended()) return;
     this.keyMashActive = true;
     this.blackout.classList.add('hypnosis__blackout--active');
@@ -397,7 +369,7 @@ class HypnosisBall {
         ? this.angelicalKeyMashSrc
         : this.keyMashSrc;
 
-    const onFadeEnd = (event) => {
+    const onFadeEnd = (event: TransitionEvent) => {
       if (event.propertyName !== 'opacity' || event.target !== this.blackout) return;
       this.blackout.removeEventListener('transitionend', onFadeEnd);
 
@@ -415,7 +387,7 @@ class HypnosisBall {
     this.blackout.addEventListener('transitionend', onFadeEnd);
   }
 
-  toggleHorror() {
+  private toggleHorror(): void {
     this.horror = !this.horror;
     this.target = this.horror ? 1 : 0;
 
@@ -426,7 +398,7 @@ class HypnosisBall {
     }
   }
 
-  toggleAngelical() {
+  private toggleAngelical(): void {
     this.angelical = !this.angelical;
     this.angelicalTarget = this.angelical ? 1 : 0;
 
@@ -437,7 +409,7 @@ class HypnosisBall {
     }
   }
 
-  tick(time) {
+  private tick(time: number): void {
     if (this.lastFrameTime === null) {
       this.lastFrameTime = time;
     }
@@ -461,14 +433,14 @@ class HypnosisBall {
     this.angle = (this.angle + speed * (dt / 1000)) % 360;
     this.ball.style.transform = `rotate(${this.angle}deg)`;
 
-    this.overlay.style.opacity = this.transition * this.maxOverlayOpacity;
+    this.overlay.style.opacity = String(this.transition * this.maxOverlayOpacity);
     this.audio.volume = this.transition * this.maxVolume;
 
     if (this.transition === 0 && !this.horror && !this.audio.paused) {
       this.audio.pause();
     }
 
-    this.angelicalOverlay.style.opacity = this.angelicalTransition * this.maxAngelicalOverlayOpacity;
+    this.angelicalOverlay.style.opacity = String(this.angelicalTransition * this.maxAngelicalOverlayOpacity);
     this.angelicalAudio.volume = this.angelicalTransition * this.maxAngelicalVolume;
 
     if (this.angelicalTransition === 0 && !this.angelical && !this.angelicalAudio.paused) {
@@ -478,12 +450,12 @@ class HypnosisBall {
     requestAnimationFrame((nextTime) => this.tick(nextTime));
   }
 
-  scheduleNextFlash() {
+  private scheduleNextFlash(): void {
     const delay = Math.random() * this.maxFlashDelayMs;
     setTimeout(() => this.triggerFlash(), delay);
   }
 
-  triggerFlash() {
+  private triggerFlash(): void {
     if (Math.random() < this.rickrollChance) {
       this.triggerRickrollReveal();
       return;
@@ -506,7 +478,7 @@ class HypnosisBall {
     }, this.flashDurationMs);
   }
 
-  triggerRickrollReveal() {
+  private triggerRickrollReveal(): void {
     this.rickroll.classList.add('hypnosis__rickroll--visible');
 
     setTimeout(() => {
@@ -515,47 +487,3 @@ class HypnosisBall {
     }, this.rickrollRevealMs);
   }
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-  new HypnosisBall({
-    ballEl: document.getElementById('hypnosisBall'),
-    flashEl: document.getElementById('hypnosisFlash'),
-    flashImageEl: document.getElementById('hypnosisFlashImage'),
-    overlayEl: document.getElementById('hypnosisOverlay'),
-    audioEl: document.getElementById('hypnosisAudio'),
-    angelicalOverlayEl: document.getElementById('hypnosisAngelicalOverlay'),
-    angelicalAudioEl: document.getElementById('hypnosisAngelicalAudio'),
-    rickrollEl: document.getElementById('hypnosisRickroll'),
-    easterEggEl: document.getElementById('hypnosisEasterEgg'),
-    easterEggFilterEl: document.getElementById('hypnosisEasterEggFilter'),
-    blackoutEl: document.getElementById('hypnosisBlackout'),
-    idleCanvasEl: document.getElementById('hypnosisIdle'),
-    secretTerminalEl: document.getElementById('secretTerminal'),
-    secretTerminalOutputEl: document.getElementById('secretTerminalOutput'),
-    secretTerminalInputEl: document.getElementById('secretTerminalInput'),
-    normalImages: ['src/img/jequiti.webp'],
-    horrorImages: [
-      'src/img/horror/1.png',
-      'src/img/horror/2.jpg',
-      'src/img/horror/3.jpg',
-      'src/img/horror/4.jpg',
-    ],
-    heavenImages: [
-      'src/img/heaven/4d2284a7de8184b18e7287cbeb07b7ac.jpg',
-      'src/img/heaven/Confused-jesus-meme-4.jpg',
-      'src/img/heaven/ecce-mono-jesus-ReproducaoInstagram.jpg.webp',
-      'src/img/heaven/images.jpg',
-      'src/img/heaven/jesus-watcha-doin-meme-xqbc6.jpg',
-    ],
-    normalEasterEggSrc: 'src/video/ronaldinhosoccer.mp4',
-    horrorEasterEggSrc: 'src/video/illuminatti.mp4',
-    angelicalEasterEggSrc: 'src/video/jesus-come.mp4',
-    keyMashSrc: 'src/video/skyrim.mp4',
-    horrorKeyMashSrc: 'src/video/jeff.mp4',
-    angelicalKeyMashSrc: 'src/video/jesus-jumpscare.mp4',
-  }).start();
-});
-
-DisableDevtool({
-  url: 'https://letmegooglethat.com/?q=are+you+studid%3F',
-});

@@ -1,3 +1,9 @@
+---
+import '../styles/style.css';
+import { withBase } from '../lib/base-path';
+import SecretTerminal from '../components/SecretTerminal.astro';
+---
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -10,16 +16,15 @@
 <meta property="og:url" content="https://evertonvg.github.io/jequiti-remake/">
 <meta property="og:title" content="Hipnose">
 <meta property="og:description" content="Uma bola hipnótica girando sem parar, escondendo surpresas.">
-<meta property="og:image" content="https://evertonvg.github.io/jequiti-remake/src/img/ball.png">
+<meta property="og:image" content="https://evertonvg.github.io/jequiti-remake/img/ball.png">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Hipnose">
 <meta name="twitter:description" content="Uma bola hipnótica girando sem parar, escondendo surpresas.">
-<meta name="twitter:image" content="https://evertonvg.github.io/jequiti-remake/src/img/ball.png">
+<meta name="twitter:image" content="https://evertonvg.github.io/jequiti-remake/img/ball.png">
 
 <title>Hipnose</title>
-<link rel="icon" type="image/png" href="src/img/favicon.png">
-<link rel="stylesheet" href="src/css/style.css">
+<link rel="icon" type="image/png" href={withBase('img/favicon.png')}>
 </head>
 <body>
 
@@ -37,22 +42,24 @@
        botão direito — bloqueado via disable-devtool; se detectar o
        DevTools aberto mesmo assim, redireciona para outra página.
     4) Ficar parado sem interagir (mouse, teclado, toque ou scroll)
-       por 2 minutos — em qualquer modo — entra em standby com a
+       por 42 segundos — em qualquer modo — entra em standby com a
        animação (canvas) do logo DVD quicando pelos cantos, trocando
        de cor a cada batida. Some ao apertar qualquer tecla.
     5) Clique duplo — tema angelical: filtro azul, bola parada e
        música angelical.mp3 em loop (substitui o modo vermelho, se
        estiver ativo).
     6) Digitar "jequiti" em qualquer lugar da página — abre um
-       terminal secreto com uma pergunta (primeiro passo da caça ao
-       tesouro).
+       terminal secreto perguntando "What is the meaning of life?".
+       Resposta certa ("DVD") toca o som de shutdown do Windows;
+       qualquer outra resposta não toca nada. O terminal fecha em
+       ambos os casos.
   -->
 
   <div class="hypnosis">
     <video
       class="hypnosis__rickroll"
       id="hypnosisRickroll"
-      src="src/video/Rick_Astley_Never_Gonna_Give_You_Up.mp4"
+      src={withBase('video/Rick_Astley_Never_Gonna_Give_You_Up.mp4')}
       autoplay
       muted
       loop
@@ -65,20 +72,20 @@
         label="Português"
         default
         src="data:text/vtt;charset=utf-8,%23%20WebVTT%0A%0A00:00:00.000%20--%3E%2000:00:06.000%0A%3C%20v%20Voice%3E%20Hipnose%20em%20modo%20normal.%0A"
-      >
+      />
       <track
         kind="descriptions"
         srclang="pt"
         label="Descrição"
         src="data:text/vtt;charset=utf-8,%23%20WebVTT%0A%0A00:00:00.000%20--%3E%2000:00:06.000%0A%20%20Uma%20transmiss%C3%A3o%20visual%20de%20efeito%20hipn%C3%B3tico%20com%20uma%20bola%20e%20flash%20de%20imagem.%0A"
-      >
+      />
     </video>
 
     <div class="hypnosis__stage">
-      <img class="hypnosis__ball" id="hypnosisBall" src="src/img/ball.png" alt="">
+      <img class="hypnosis__ball" id="hypnosisBall" src={withBase('img/ball.png')} alt="">
 
       <div class="hypnosis__flash" id="hypnosisFlash">
-        <img class="hypnosis__flash-image" id="hypnosisFlashImage" src="src/img/jequiti.webp" alt="">
+        <img class="hypnosis__flash-image" id="hypnosisFlashImage" src={withBase('img/jequiti.webp')} alt="">
       </div>
     </div>
 
@@ -94,28 +101,11 @@
     <canvas class="hypnosis__idle" id="hypnosisIdle" aria-label="Modo inativo: animação do logo DVD quicando pelos cantos"></canvas>
   </div>
 
-  <div class="secret-terminal" id="secretTerminal">
-    <div class="secret-terminal__window">
-      <pre class="secret-terminal__output" id="secretTerminalOutput"></pre>
-      <div class="secret-terminal__input-line">
-        <span class="secret-terminal__prompt">&gt;</span>
-        <input
-          class="secret-terminal__input"
-          id="secretTerminalInput"
-          type="text"
-          autocomplete="off"
-          autocapitalize="off"
-          spellcheck="false"
-          aria-label="Terminal input"
-        >
-      </div>
-    </div>
-  </div>
+  <SecretTerminal />
 
-  <audio id="hypnosisAudio" src="src/audio/siren-head-sounds-new.mp3" loop preload="auto"></audio>
-  <audio id="hypnosisAngelicalAudio" src="src/audio/angelical.mp3" loop preload="auto"></audio>
+  <audio id="hypnosisAudio" src={withBase('audio/siren-head-sounds-new.mp3')} loop preload="auto"></audio>
+  <audio id="hypnosisAngelicalAudio" src={withBase('audio/angelical.mp3')} loop preload="auto"></audio>
 
-  <script src="src/js/lib/disable-devtool.min.js"></script>
-  <script src="src/js/script.js"></script>
+  <script src="../scripts/main.ts"></script>
 </body>
 </html>

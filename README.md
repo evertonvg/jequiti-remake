@@ -13,22 +13,35 @@ Algumas pistas do que tem escondido por aí:
 - Sequências de teclas conhecidas da cultura gamer fazem coisas inesperadas.
 - Digitar rápido demais também tem consequência.
 - Ficar parado por tempo demais, também.
+- Digitar o nome da loja em qualquer lugar da página abre outra coisa.
 - Curiosos que abrem o DevTools recebem uma mensagem especial.
 
-Não tem spoiler aqui — a graça é descobrir jogando ou lendo o `index.html`, que documenta tudo em comentário pra quem quiser trapacear.
+Não tem spoiler aqui — a graça é descobrir jogando ou lendo o código-fonte, que documenta tudo em comentário pra quem quiser trapacear.
 
 ## Tecnologias
 
-HTML, CSS e JavaScript puros, sem framework e sem build — só abrir o `index.html` no navegador (ou acessar o link do GitHub Pages).
+[Astro](https://astro.build) + [Alpine.js](https://alpinejs.dev) + TypeScript, com testes de ponta a ponta em [Playwright](https://playwright.dev). Publicado no GitHub Pages via GitHub Actions.
+
+## Rodando local
+
+```
+npm install
+npm run dev     # site em http://localhost:4321
+npm run test    # suíte Playwright
+npm run build   # gera dist/
+```
 
 ## Estrutura
 
 ```
-index.html
 src/
-  css/     estilos (BEM)
-  js/      lógica da bola, transições e easter eggs
-  img/     imagens usadas nos flashes e no favicon
-  audio/   sirene do modo vermelho
-  video/   os vídeos surpresa
+  pages/       página principal (index.astro)
+  components/  componentes Astro (terminal secreto, etc.)
+  lib/         lógica da bola, transições e easter eggs (TypeScript)
+  scripts/     entrada client-side
+  styles/      estilos (BEM)
+  config/      configuração de assets
+public/
+  img/ audio/ video/   mídia usada nos flashes, sons e vídeos surpresa
+tests/         suíte Playwright (um spec por grupo de easter eggs)
 ```
