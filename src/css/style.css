@@ -16,10 +16,20 @@ body {
   height: 100vh;
 }
 
+.hypnosis__rickroll {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: 0;
+}
+
 .hypnosis__stage {
   position: relative;
   width: 100vw;
   height: 100vh;
+  z-index: 1;
 }
 
 .hypnosis__ball {
@@ -60,4 +70,5 @@ body {
   pointer-events: none;
   background: radial-gradient(circle at center, rgba(120, 0, 0, 0.9) 0%, rgba(10, 0, 0, 0.95) 100%);
   mix-blend-mode: multiply;
+  z-index: 2;
 }

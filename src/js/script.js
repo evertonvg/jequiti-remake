@@ -5,6 +5,7 @@ class HypnosisBall {
     flashImageEl,
     overlayEl,
     audioEl,
+    rickrollEl,
     normalImages,
     horrorImages,
     maxFlashDelayMs = 30000,
@@ -19,6 +20,7 @@ class HypnosisBall {
     this.flashImage = flashImageEl;
     this.overlay = overlayEl;
     this.audio = audioEl;
+    this.rickroll = rickrollEl;
     this.normalImages = normalImages;
     this.horrorImages = horrorImages;
     this.maxFlashDelayMs = maxFlashDelayMs;
@@ -37,6 +39,10 @@ class HypnosisBall {
 
   start() {
     document.addEventListener('click', () => this.toggleHorror());
+
+    this.rickroll.muted = true;
+    this.rickroll.play().catch(() => {});
+
     this.scheduleNextFlash();
     requestAnimationFrame((time) => this.tick(time));
   }
@@ -105,6 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     flashImageEl: document.getElementById('hypnosisFlashImage'),
     overlayEl: document.getElementById('hypnosisOverlay'),
     audioEl: document.getElementById('hypnosisAudio'),
+    rickrollEl: document.getElementById('hypnosisRickroll'),
     normalImages: ['src/img/jequiti.webp'],
     horrorImages: [
       'src/img/horror/1.png',
