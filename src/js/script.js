@@ -1,3 +1,9 @@
+const KONAMI_SEQUENCE = [
+  'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
+  'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
+  'KeyB', 'KeyA',
+];
+
 class HypnosisBall {
   constructor({
     ballEl,
@@ -6,8 +12,11 @@ class HypnosisBall {
     overlayEl,
     audioEl,
     rickrollEl,
+    easterEggEl,
     normalImages,
     horrorImages,
+    normalEasterEggSrc,
+    horrorEasterEggSrc,
     maxFlashDelayMs = 30000,
     flashDurationMs = 80,
     rickrollChance = 0.1,
@@ -23,8 +32,11 @@ class HypnosisBall {
     this.overlay = overlayEl;
     this.audio = audioEl;
     this.rickroll = rickrollEl;
+    this.easterEgg = easterEggEl;
     this.normalImages = normalImages;
     this.horrorImages = horrorImages;
+    this.normalEasterEggSrc = normalEasterEggSrc;
+    this.horrorEasterEggSrc = horrorEasterEggSrc;
     this.maxFlashDelayMs = maxFlashDelayMs;
     this.flashDurationMs = flashDurationMs;
     this.rickrollChance = rickrollChance;
@@ -39,16 +51,50 @@ class HypnosisBall {
     this.target = 0;
     this.horror = false;
     this.lastFrameTime = null;
+    this.easterEggActive = false;
+    this.konamiBuffer = [];
   }
 
   start() {
-    document.addEventListener('click', () => this.toggleHorror());
+    document.addEventListener('click', () => {
+      if (this.easterEggActive) return;
+      this.toggleHorror();
+    });
+    document.addEventListener('keydown', (event) => this.onKeydown(event));
 
     this.rickroll.muted = true;
     this.rickroll.play().catch(() => {});
 
     this.scheduleNextFlash();
     requestAnimationFrame((time) => this.tick(time));
+  }
+
+  onKeydown(event) {
+    this.konamiBuffer.push(event.code);
+    this.konamiBuffer = this.konamiBuffer.slice(-KONAMI_SEQUENCE.length);
+
+    if (this.konamiBuffer.join(',') === KONAMI_SEQUENCE.join(',')) {
+      this.triggerEasterEgg();
+    }
+  }
+
+  triggerEasterEgg() {
+    if (this.easterEggActive) return;
+    this.easterEggActive = true;
+
+    this.easterEgg.src = this.horror ? this.horrorEasterEggSrc : this.normalEasterEggSrc;
+    this.easterEgg.currentTime = 0;
+    this.easterEgg.muted = false;
+    this.easterEgg.classList.add('hypnosis__easter-egg--active');
+    this.easterEgg.play().catch(() => {});
+
+    const onEnded = () => {
+      this.easterEgg.removeEventListener('ended', onEnded);
+      this.easterEgg.classList.remove('hypnosis__easter-egg--active');
+      this.easterEgg.removeAttribute('src');
+      this.easterEggActive = false;
+    };
+    this.easterEgg.addEventListener('ended', onEnded);
   }
 
   toggleHorror() {
@@ -130,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
     overlayEl: document.getElementById('hypnosisOverlay'),
     audioEl: document.getElementById('hypnosisAudio'),
     rickrollEl: document.getElementById('hypnosisRickroll'),
+    easterEggEl: document.getElementById('hypnosisEasterEgg'),
     normalImages: ['src/img/jequiti.webp'],
     horrorImages: [
       'src/img/horror/1.png',
@@ -137,5 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'src/img/horror/3.jpg',
       'src/img/horror/4.jpg',
     ],
+    normalEasterEggSrc: 'src/video/ronaldinhosoccer.mp4',
+    horrorEasterEggSrc: 'src/video/illuminatti.mp4',
   }).start();
 });

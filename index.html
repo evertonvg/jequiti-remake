@@ -8,6 +8,12 @@
 </head>
 <body>
 
+  <!--
+    Easter egg: código Konami (↑ ↑ ↓ ↓ ← → ← → B A)
+    Dispara um vídeo surpresa em tela cheia com som — Ronaldinho no
+    modo normal, Illuminati no modo vermelho/invertido.
+  -->
+
   <div class="hypnosis">
     <video
       class="hypnosis__rickroll"
@@ -28,6 +34,8 @@
     </div>
 
     <div class="hypnosis__overlay" id="hypnosisOverlay"></div>
+
+    <video class="hypnosis__easter-egg" id="hypnosisEasterEgg" playsinline></video>
   </div>
 
   <audio id="hypnosisAudio" src="src/audio/siren-head-sounds-new.mp3" loop preload="auto"></audio>
