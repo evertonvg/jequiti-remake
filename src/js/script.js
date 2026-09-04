@@ -10,6 +10,8 @@ class HypnosisBall {
     horrorImages,
     maxFlashDelayMs = 30000,
     flashDurationMs = 80,
+    rickrollChance = 0.1,
+    rickrollRevealMs = 4000,
     normalSpeedDeg = 120,
     transitionMs = 5000,
     maxOverlayOpacity = 0.75,
@@ -25,6 +27,8 @@ class HypnosisBall {
     this.horrorImages = horrorImages;
     this.maxFlashDelayMs = maxFlashDelayMs;
     this.flashDurationMs = flashDurationMs;
+    this.rickrollChance = rickrollChance;
+    this.rickrollRevealMs = rickrollRevealMs;
     this.normalSpeedDeg = normalSpeedDeg;
     this.transitionMs = transitionMs;
     this.maxOverlayOpacity = maxOverlayOpacity;
@@ -90,6 +94,11 @@ class HypnosisBall {
   }
 
   triggerFlash() {
+    if (Math.random() < this.rickrollChance) {
+      this.triggerRickrollReveal();
+      return;
+    }
+
     const pool = this.horror ? this.horrorImages : this.normalImages;
     this.flashImage.src = pool[Math.floor(Math.random() * pool.length)];
 
@@ -101,6 +110,15 @@ class HypnosisBall {
       this.ball.classList.remove('hypnosis__ball--hidden');
       this.scheduleNextFlash();
     }, this.flashDurationMs);
+  }
+
+  triggerRickrollReveal() {
+    this.rickroll.classList.add('hypnosis__rickroll--visible');
+
+    setTimeout(() => {
+      this.rickroll.classList.remove('hypnosis__rickroll--visible');
+      this.scheduleNextFlash();
+    }, this.rickrollRevealMs);
   }
 }
 
