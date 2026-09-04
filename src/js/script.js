@@ -14,10 +14,12 @@ class HypnosisBall {
     rickrollEl,
     easterEggEl,
     easterEggFilterEl,
+    blackoutEl,
     normalImages,
     horrorImages,
     normalEasterEggSrc,
     horrorEasterEggSrc,
+    keyMashSrc,
     maxFlashDelayMs = 30000,
     flashDurationMs = 80,
     rickrollChance = 0.1,
@@ -26,6 +28,8 @@ class HypnosisBall {
     transitionMs = 5000,
     maxOverlayOpacity = 0.75,
     maxVolume = 0.8,
+    keyMashThreshold = 20,
+    keyMashWindowMs = 5000,
   }) {
     this.ball = ballEl;
     this.flash = flashEl;
@@ -35,10 +39,12 @@ class HypnosisBall {
     this.rickroll = rickrollEl;
     this.easterEgg = easterEggEl;
     this.easterEggFilter = easterEggFilterEl;
+    this.blackout = blackoutEl;
     this.normalImages = normalImages;
     this.horrorImages = horrorImages;
     this.normalEasterEggSrc = normalEasterEggSrc;
     this.horrorEasterEggSrc = horrorEasterEggSrc;
+    this.keyMashSrc = keyMashSrc;
     this.maxFlashDelayMs = maxFlashDelayMs;
     this.flashDurationMs = flashDurationMs;
     this.rickrollChance = rickrollChance;
@@ -47,6 +53,8 @@ class HypnosisBall {
     this.transitionMs = transitionMs;
     this.maxOverlayOpacity = maxOverlayOpacity;
     this.maxVolume = maxVolume;
+    this.keyMashThreshold = keyMashThreshold;
+    this.keyMashWindowMs = keyMashWindowMs;
 
     this.angle = 0;
     this.transition = 0;
@@ -54,12 +62,14 @@ class HypnosisBall {
     this.horror = false;
     this.lastFrameTime = null;
     this.easterEggActive = false;
+    this.keyMashActive = false;
     this.konamiBuffer = [];
+    this.keyMashTimestamps = [];
   }
 
   start() {
     document.addEventListener('click', () => {
-      if (this.easterEggActive) return;
+      if (this.isInteractionSuspended()) return;
       this.toggleHorror();
     });
     document.addEventListener('keydown', (event) => this.onKeydown(event));
@@ -71,36 +81,83 @@ class HypnosisBall {
     requestAnimationFrame((time) => this.tick(time));
   }
 
+  isInteractionSuspended() {
+    return this.easterEggActive || this.keyMashActive;
+  }
+
   onKeydown(event) {
+    if (this.isInteractionSuspended()) return;
+
     this.konamiBuffer.push(event.code);
     this.konamiBuffer = this.konamiBuffer.slice(-KONAMI_SEQUENCE.length);
 
     if (this.konamiBuffer.join(',') === KONAMI_SEQUENCE.join(',')) {
       this.triggerEasterEgg();
+      return;
+    }
+
+    this.trackKeyMash();
+  }
+
+  trackKeyMash() {
+    const now = performance.now();
+    this.keyMashTimestamps.push(now);
+    this.keyMashTimestamps = this.keyMashTimestamps.filter((t) => now - t <= this.keyMashWindowMs);
+
+    if (this.keyMashTimestamps.length > this.keyMashThreshold) {
+      this.keyMashTimestamps = [];
+      this.triggerKeyMashEffect();
     }
   }
 
+  playFullscreenVideo(src) {
+    return new Promise((resolve) => {
+      this.easterEgg.src = src;
+      this.easterEgg.currentTime = 0;
+      this.easterEgg.muted = false;
+      this.easterEgg.classList.add('hypnosis__easter-egg--active');
+      this.easterEgg.play().catch(() => {});
+
+      const onEnded = () => {
+        this.easterEgg.removeEventListener('ended', onEnded);
+        this.easterEgg.classList.remove('hypnosis__easter-egg--active');
+        this.easterEgg.removeAttribute('src');
+        resolve();
+      };
+      this.easterEgg.addEventListener('ended', onEnded);
+    });
+  }
+
   triggerEasterEgg() {
-    if (this.easterEggActive) return;
+    if (this.isInteractionSuspended()) return;
     this.easterEggActive = true;
 
-    this.easterEgg.src = this.horror ? this.horrorEasterEggSrc : this.normalEasterEggSrc;
-    this.easterEgg.currentTime = 0;
-    this.easterEgg.muted = false;
-    this.easterEgg.classList.add('hypnosis__easter-egg--active');
-    if (this.horror) {
+    const isHorrorVideo = this.horror;
+    if (isHorrorVideo) {
       this.easterEggFilter.classList.add('hypnosis__easter-egg-filter--active');
     }
-    this.easterEgg.play().catch(() => {});
 
-    const onEnded = () => {
-      this.easterEgg.removeEventListener('ended', onEnded);
-      this.easterEgg.classList.remove('hypnosis__easter-egg--active');
+    this.playFullscreenVideo(isHorrorVideo ? this.horrorEasterEggSrc : this.normalEasterEggSrc).then(() => {
       this.easterEggFilter.classList.remove('hypnosis__easter-egg-filter--active');
-      this.easterEgg.removeAttribute('src');
       this.easterEggActive = false;
+    });
+  }
+
+  triggerKeyMashEffect() {
+    if (this.isInteractionSuspended()) return;
+    this.keyMashActive = true;
+    this.blackout.classList.add('hypnosis__blackout--active');
+
+    const onFadeEnd = (event) => {
+      if (event.propertyName !== 'opacity' || event.target !== this.blackout) return;
+      this.blackout.removeEventListener('transitionend', onFadeEnd);
+
+      this.playFullscreenVideo(this.keyMashSrc).then(() => {
+        this.blackout.classList.remove('hypnosis__blackout--active');
+        this.keyMashActive = false;
+      });
     };
-    this.easterEgg.addEventListener('ended', onEnded);
+    this.blackout.addEventListener('transitionend', onFadeEnd);
   }
 
   toggleHorror() {
@@ -184,6 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
     rickrollEl: document.getElementById('hypnosisRickroll'),
     easterEggEl: document.getElementById('hypnosisEasterEgg'),
     easterEggFilterEl: document.getElementById('hypnosisEasterEggFilter'),
+    blackoutEl: document.getElementById('hypnosisBlackout'),
     normalImages: ['src/img/jequiti.webp'],
     horrorImages: [
       'src/img/horror/1.png',
@@ -193,5 +251,6 @@ document.addEventListener('DOMContentLoaded', () => {
     ],
     normalEasterEggSrc: 'src/video/ronaldinhosoccer.mp4',
     horrorEasterEggSrc: 'src/video/illuminatti.mp4',
+    keyMashSrc: 'src/video/skyrim.mp4',
   }).start();
 });

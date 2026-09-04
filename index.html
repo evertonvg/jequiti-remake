@@ -9,9 +9,13 @@
 <body>
 
   <!--
-    Easter egg: código Konami (↑ ↑ ↓ ↓ ← → ← → B A)
-    Dispara um vídeo surpresa em tela cheia com som — Ronaldinho no
-    modo normal, Illuminati no modo vermelho/invertido.
+    Easter eggs:
+    1) Código Konami (↑ ↑ ↓ ↓ ← → ← → B A) — dispara um vídeo
+       surpresa em tela cheia com som: Ronaldinho no modo normal,
+       Illuminati no modo vermelho/invertido.
+    2) Apertar mais de 20 teclas em menos de 5 segundos — a tela
+       escurece aos poucos e, ao ficar totalmente preta, toca o
+       vídeo do Skyrim.
   -->
 
   <div class="hypnosis">
@@ -49,6 +53,8 @@
     </div>
 
     <div class="hypnosis__overlay" id="hypnosisOverlay"></div>
+
+    <div class="hypnosis__blackout" id="hypnosisBlackout"></div>
 
     <video class="hypnosis__easter-egg" id="hypnosisEasterEgg" playsinline></video>
     <div class="hypnosis__easter-egg-filter" id="hypnosisEasterEggFilter"></div>
