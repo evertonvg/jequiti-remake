@@ -125,9 +125,6 @@ body {
 .hypnosis__idle {
   position: fixed;
   inset: 0;
-  width: 100vw;
-  height: 100vh;
-  object-fit: cover;
   display: none;
   background: #000;
   z-index: 4;

@@ -4,6 +4,87 @@ const KONAMI_SEQUENCE = [
   'KeyB', 'KeyA',
 ];
 
+class DvdScreensaver {
+  constructor(canvasEl, { logoWidth = 120, logoHeight = 60, speed = 3 } = {}) {
+    this.canvas = canvasEl;
+    this.ctx = this.canvas.getContext('2d');
+    this.logoWidth = logoWidth;
+    this.logoHeight = logoHeight;
+    this.speed = speed;
+    this.rafId = null;
+  }
+
+  start() {
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
+
+    this.x = Math.random() * (this.canvas.width - this.logoWidth);
+    this.y = Math.random() * (this.canvas.height - this.logoHeight);
+    this.speedX = this.speed;
+    this.speedY = this.speed;
+    this.hue = 0;
+    this.color = this.nextColor();
+
+    this.loop();
+  }
+
+  stop() {
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+  }
+
+  nextColor() {
+    this.hue = (this.hue + 60) % 360;
+    return `hsl(${this.hue}, 100%, 50%)`;
+  }
+
+  drawLogo(px, py, color) {
+    const ctx = this.ctx;
+    ctx.fillStyle = color;
+    ctx.font = 'bold 38px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('DVD', px + this.logoWidth / 2, py + this.logoHeight / 2 - 6);
+
+    ctx.beginPath();
+    ctx.ellipse(px + this.logoWidth / 2, py + this.logoHeight - 10, this.logoWidth / 2.2, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(px + this.logoWidth / 2, py + this.logoHeight - 10, this.logoWidth / 3.5, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  loop() {
+    const ctx = this.ctx;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    this.x += this.speedX;
+    this.y += this.speedY;
+
+    let hit = false;
+    if (this.x + this.logoWidth >= this.canvas.width || this.x <= 0) {
+      this.speedX = -this.speedX;
+      hit = true;
+    }
+    if (this.y + this.logoHeight >= this.canvas.height || this.y <= 0) {
+      this.speedY = -this.speedY;
+      hit = true;
+    }
+    if (hit) {
+      this.color = this.nextColor();
+    }
+
+    this.drawLogo(this.x, this.y, this.color);
+
+    this.rafId = requestAnimationFrame(() => this.loop());
+  }
+}
+
 class HypnosisBall {
   constructor({
     ballEl,
@@ -15,7 +96,7 @@ class HypnosisBall {
     easterEggEl,
     easterEggFilterEl,
     blackoutEl,
-    idleEl,
+    idleCanvasEl,
     normalImages,
     horrorImages,
     normalEasterEggSrc,
@@ -43,7 +124,8 @@ class HypnosisBall {
     this.easterEgg = easterEggEl;
     this.easterEggFilter = easterEggFilterEl;
     this.blackout = blackoutEl;
-    this.idle = idleEl;
+    this.idleCanvas = idleCanvasEl;
+    this.idleScreensaver = new DvdScreensaver(idleCanvasEl);
     this.normalImages = normalImages;
     this.horrorImages = horrorImages;
     this.normalEasterEggSrc = normalEasterEggSrc;
@@ -130,16 +212,15 @@ class HypnosisBall {
     this.idleSirenWasPlaying = !this.audio.paused;
     this.audio.pause();
 
-    this.idle.currentTime = 0;
-    this.idle.classList.add('hypnosis__idle--active');
-    this.idle.play().catch(() => {});
+    this.idleCanvas.classList.add('hypnosis__idle--active');
+    this.idleScreensaver.start();
   }
 
   dismissIdleEffect() {
     this.idleActive = false;
 
-    this.idle.classList.remove('hypnosis__idle--active');
-    this.idle.pause();
+    this.idleScreensaver.stop();
+    this.idleCanvas.classList.remove('hypnosis__idle--active');
 
     if (this.idleSirenWasPlaying) {
       this.audio.play().catch(() => {});
@@ -301,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
     easterEggEl: document.getElementById('hypnosisEasterEgg'),
     easterEggFilterEl: document.getElementById('hypnosisEasterEggFilter'),
     blackoutEl: document.getElementById('hypnosisBlackout'),
-    idleEl: document.getElementById('hypnosisIdle'),
+    idleCanvasEl: document.getElementById('hypnosisIdle'),
     normalImages: ['src/img/jequiti.webp'],
     horrorImages: [
       'src/img/horror/1.png',
@@ -317,22 +398,40 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 (() => {
-  const THRESHOLD = 160;
+  const SIZE_THRESHOLD = 100;
   let shown = false;
 
-  const isDevToolsOpen = () =>
-    window.outerWidth - window.innerWidth > THRESHOLD ||
-    window.outerHeight - window.innerHeight > THRESHOLD;
+  const showMessage = () => {
+    if (shown) return;
+    shown = true;
+    console.log('%cmensagem para você:', 'font-size: 20px; font-weight: bold;');
+    console.log(
+      '%c ',
+      'font-size: 1px; padding: 100px 150px; background: url(src/img/jesus.jpg) no-repeat center / contain;'
+    );
+  };
+
+  const isSizeDiffOpen = () =>
+    window.outerWidth - window.innerWidth > SIZE_THRESHOLD ||
+    window.outerHeight - window.innerHeight > SIZE_THRESHOLD;
+
+  // pega DevTools destacado (janela separada), onde outerWidth/outerHeight não mudam:
+  // o preview do objeto só é calculado quando o painel do console está de fato renderizando
+  let probeAccessed = false;
+  const probe = new Image();
+  Object.defineProperty(probe, 'id', {
+    get() {
+      probeAccessed = true;
+      return '';
+    },
+  });
 
   setInterval(() => {
-    if (isDevToolsOpen()) {
-      if (shown) return;
-      shown = true;
-      console.log('%cmensagem para você:', 'font-size: 20px; font-weight: bold;');
-      console.log(
-        '%c ',
-        'font-size: 1px; padding: 100px 150px; background: url(src/img/jesus.jpg) no-repeat center / contain;'
-      );
+    probeAccessed = false;
+    console.log(probe);
+
+    if (isSizeDiffOpen() || probeAccessed) {
+      showMessage();
     } else {
       shown = false;
     }
