@@ -23,7 +23,22 @@
       muted
       loop
       playsinline
-    ></video>
+      aria-label="Vídeo de abertura com legenda e descrição do efeito visual"
+    >
+      <track
+        kind="captions"
+        srclang="pt"
+        label="Português"
+        default
+        src="data:text/vtt;charset=utf-8,%23%20WebVTT%0A%0A00:00:00.000%20--%3E%2000:00:06.000%0A%3C%20v%20Voice%3E%20Hipnose%20em%20modo%20normal.%0A"
+      >
+      <track
+        kind="descriptions"
+        srclang="pt"
+        label="Descrição"
+        src="data:text/vtt;charset=utf-8,%23%20WebVTT%0A%0A00:00:00.000%20--%3E%2000:00:06.000%0A%20%20Uma%20transmiss%C3%A3o%20visual%20de%20efeito%20hipn%C3%B3tico%20com%20uma%20bola%20e%20flash%20de%20imagem.%0A"
+      >
+    </video>
 
     <div class="hypnosis__stage">
       <img class="hypnosis__ball" id="hypnosisBall" src="src/img/ball.png" alt="">
@@ -36,6 +51,7 @@
     <div class="hypnosis__overlay" id="hypnosisOverlay"></div>
 
     <video class="hypnosis__easter-egg" id="hypnosisEasterEgg" playsinline></video>
+    <div class="hypnosis__easter-egg-filter" id="hypnosisEasterEggFilter"></div>
   </div>
 
   <audio id="hypnosisAudio" src="src/audio/siren-head-sounds-new.mp3" loop preload="auto"></audio>

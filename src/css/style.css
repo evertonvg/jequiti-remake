@@ -93,3 +93,17 @@ body {
 .hypnosis__easter-egg--active {
   display: block;
 }
+
+.hypnosis__easter-egg-filter {
+  position: fixed;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at center, rgba(160, 0, 0, 0.97) 0%, rgba(15, 0, 0, 1) 100%);
+  mix-blend-mode: multiply;
+  z-index: 4;
+}
+
+.hypnosis__easter-egg-filter--active {
+  opacity: 1;
+}

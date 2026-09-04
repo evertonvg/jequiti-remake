@@ -13,6 +13,7 @@ class HypnosisBall {
     audioEl,
     rickrollEl,
     easterEggEl,
+    easterEggFilterEl,
     normalImages,
     horrorImages,
     normalEasterEggSrc,
@@ -33,6 +34,7 @@ class HypnosisBall {
     this.audio = audioEl;
     this.rickroll = rickrollEl;
     this.easterEgg = easterEggEl;
+    this.easterEggFilter = easterEggFilterEl;
     this.normalImages = normalImages;
     this.horrorImages = horrorImages;
     this.normalEasterEggSrc = normalEasterEggSrc;
@@ -86,11 +88,15 @@ class HypnosisBall {
     this.easterEgg.currentTime = 0;
     this.easterEgg.muted = false;
     this.easterEgg.classList.add('hypnosis__easter-egg--active');
+    if (this.horror) {
+      this.easterEggFilter.classList.add('hypnosis__easter-egg-filter--active');
+    }
     this.easterEgg.play().catch(() => {});
 
     const onEnded = () => {
       this.easterEgg.removeEventListener('ended', onEnded);
       this.easterEgg.classList.remove('hypnosis__easter-egg--active');
+      this.easterEggFilter.classList.remove('hypnosis__easter-egg-filter--active');
       this.easterEgg.removeAttribute('src');
       this.easterEggActive = false;
     };
@@ -177,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
     audioEl: document.getElementById('hypnosisAudio'),
     rickrollEl: document.getElementById('hypnosisRickroll'),
     easterEggEl: document.getElementById('hypnosisEasterEgg'),
+    easterEggFilterEl: document.getElementById('hypnosisEasterEggFilter'),
     normalImages: ['src/img/jequiti.webp'],
     horrorImages: [
       'src/img/horror/1.png',
