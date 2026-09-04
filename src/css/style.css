@@ -28,7 +28,7 @@ body {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  animation: hypnosis-spin 3s linear infinite;
+  cursor: pointer;
 }
 
 .hypnosis__ball--hidden {
@@ -53,11 +53,11 @@ body {
   object-fit: cover;
 }
 
-@keyframes hypnosis-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.hypnosis__overlay {
+  position: fixed;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at center, rgba(120, 0, 0, 0.9) 0%, rgba(10, 0, 0, 0.95) 100%);
+  mix-blend-mode: multiply;
 }
