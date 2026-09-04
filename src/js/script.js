@@ -113,7 +113,7 @@ class HypnosisBall {
     maxVolume = 0.8,
     keyMashThreshold = 20,
     keyMashWindowMs = 5000,
-    idleMs = 10000, // TODO: voltar para 120000 depois de olhar
+    idleMs = 120000,
   }) {
     this.ball = ballEl;
     this.flash = flashEl;
