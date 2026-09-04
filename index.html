@@ -33,7 +33,9 @@
        vídeo do Skyrim no modo normal, ou o vídeo do Jeff no modo
        vermelho/invertido (pausando a sirene de fundo enquanto o
        vídeo do Jeff toca).
-    3) Abrir o DevTools — deixa uma mensagem no console.
+    3) Abrir o DevTools (F12, atalhos, menu do navegador) ou clicar com o
+       botão direito — bloqueado via disable-devtool; se detectar o
+       DevTools aberto mesmo assim, redireciona para outra página.
     4) Ficar parado sem interagir (mouse, teclado, toque ou scroll)
        por 2 minutos — em qualquer modo — entra em standby com a
        animação (canvas) do logo DVD quicando pelos cantos, trocando
@@ -41,6 +43,9 @@
     5) Clique duplo — tema angelical: filtro azul, bola parada e
        música angelical.mp3 em loop (substitui o modo vermelho, se
        estiver ativo).
+    6) Digitar "jequiti" em qualquer lugar da página — abre um
+       terminal secreto com uma pergunta (primeiro passo da caça ao
+       tesouro).
   -->
 
   <div class="hypnosis">
@@ -89,9 +94,28 @@
     <canvas class="hypnosis__idle" id="hypnosisIdle" aria-label="Modo inativo: animação do logo DVD quicando pelos cantos"></canvas>
   </div>
 
+  <div class="secret-terminal" id="secretTerminal">
+    <div class="secret-terminal__window">
+      <pre class="secret-terminal__output" id="secretTerminalOutput"></pre>
+      <div class="secret-terminal__input-line">
+        <span class="secret-terminal__prompt">&gt;</span>
+        <input
+          class="secret-terminal__input"
+          id="secretTerminalInput"
+          type="text"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          aria-label="Terminal input"
+        >
+      </div>
+    </div>
+  </div>
+
   <audio id="hypnosisAudio" src="src/audio/siren-head-sounds-new.mp3" loop preload="auto"></audio>
   <audio id="hypnosisAngelicalAudio" src="src/audio/angelical.mp3" loop preload="auto"></audio>
 
+  <script src="src/js/lib/disable-devtool.min.js"></script>
   <script src="src/js/script.js"></script>
 </body>
 </html>

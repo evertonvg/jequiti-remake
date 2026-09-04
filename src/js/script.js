@@ -4,6 +4,8 @@ const KONAMI_SEQUENCE = [
   'KeyB', 'KeyA',
 ];
 
+const SECRET_WORD = 'jequiti';
+
 class DvdScreensaver {
   constructor(canvasEl, { logoWidth = 120, logoHeight = 60, speed = 3 } = {}) {
     this.canvas = canvasEl;
@@ -99,6 +101,9 @@ class HypnosisBall {
     easterEggFilterEl,
     blackoutEl,
     idleCanvasEl,
+    secretTerminalEl,
+    secretTerminalOutputEl,
+    secretTerminalInputEl,
     normalImages,
     horrorImages,
     heavenImages,
@@ -136,6 +141,9 @@ class HypnosisBall {
     this.blackout = blackoutEl;
     this.idleCanvas = idleCanvasEl;
     this.idleScreensaver = new DvdScreensaver(idleCanvasEl);
+    this.secretTerminal = secretTerminalEl;
+    this.secretTerminalOutput = secretTerminalOutputEl;
+    this.secretTerminalInput = secretTerminalInputEl;
     this.normalImages = normalImages;
     this.horrorImages = horrorImages;
     this.heavenImages = heavenImages;
@@ -173,6 +181,8 @@ class HypnosisBall {
     this.idleActive = false;
     this.idleSirenWasPlaying = false;
     this.konamiBuffer = [];
+    this.secretWordBuffer = '';
+    this.secretTerminalActive = false;
     this.keyMashTimestamps = [];
     this.idleTimeoutId = null;
     this.pendingClickTimeoutId = null;
@@ -190,13 +200,22 @@ class HypnosisBall {
     this.rickroll.muted = true;
     this.rickroll.play().catch(() => {});
 
+    this.secretTerminalInput.addEventListener('keydown', (event) => {
+      event.stopPropagation();
+      if (event.key === 'Enter') {
+        this.submitSecretTerminalAnswer();
+      } else if (event.key === 'Escape') {
+        this.closeSecretTerminal();
+      }
+    });
+
     this.scheduleNextFlash();
     this.resetIdleTimer();
     requestAnimationFrame((time) => this.tick(time));
   }
 
   isInteractionSuspended() {
-    return this.easterEggActive || this.keyMashActive || this.idleActive;
+    return this.easterEggActive || this.keyMashActive || this.idleActive || this.secretTerminalActive;
   }
 
   onClick() {
@@ -231,7 +250,45 @@ class HypnosisBall {
       return;
     }
 
+    if (event.key.length === 1) {
+      this.secretWordBuffer = (this.secretWordBuffer + event.key.toLowerCase()).slice(-SECRET_WORD.length);
+      if (this.secretWordBuffer === SECRET_WORD) {
+        this.openSecretTerminal();
+        return;
+      }
+    }
+
     this.trackKeyMash();
+  }
+
+  openSecretTerminal() {
+    this.secretTerminalActive = true;
+    this.secretWordBuffer = '';
+    this.secretTerminalOutput.textContent = 'What is the meaning of life?';
+    this.secretTerminalInput.value = '';
+    this.secretTerminal.classList.add('secret-terminal--active');
+    requestAnimationFrame(() => this.secretTerminalInput.focus());
+  }
+
+  closeSecretTerminal() {
+    this.secretTerminalActive = false;
+    this.secretTerminal.classList.remove('secret-terminal--active');
+    this.secretTerminalInput.blur();
+    this.resetIdleTimer();
+  }
+
+  submitSecretTerminalAnswer() {
+    const answer = this.secretTerminalInput.value.trim();
+    if (!answer) return;
+
+    this.secretTerminalOutput.textContent += `\n> ${answer}`;
+    this.secretTerminalInput.value = '';
+
+    try {
+      localStorage.setItem('jequitiTreasureStep1Answer', answer);
+    } catch {
+      // localStorage indisponível (ex: modo privado) — segue sem persistir.
+    }
   }
 
   resetIdleTimer() {
@@ -473,6 +530,9 @@ document.addEventListener('DOMContentLoaded', () => {
     easterEggFilterEl: document.getElementById('hypnosisEasterEggFilter'),
     blackoutEl: document.getElementById('hypnosisBlackout'),
     idleCanvasEl: document.getElementById('hypnosisIdle'),
+    secretTerminalEl: document.getElementById('secretTerminal'),
+    secretTerminalOutputEl: document.getElementById('secretTerminalOutput'),
+    secretTerminalInputEl: document.getElementById('secretTerminalInput'),
     normalImages: ['src/img/jequiti.webp'],
     horrorImages: [
       'src/img/horror/1.png',
@@ -496,43 +556,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }).start();
 });
 
-(() => {
-  const SIZE_THRESHOLD = 100;
-  let shown = false;
-
-  const showMessage = () => {
-    if (shown) return;
-    shown = true;
-    console.log('%cmensagem para você:', 'font-size: 20px; font-weight: bold;');
-    console.log(
-      '%c ',
-      'font-size: 1px; padding: 100px 150px; background: url(src/img/jesus.jpg) no-repeat center / contain;'
-    );
-  };
-
-  const isSizeDiffOpen = () =>
-    window.outerWidth - window.innerWidth > SIZE_THRESHOLD ||
-    window.outerHeight - window.innerHeight > SIZE_THRESHOLD;
-
-  // pega DevTools destacado (janela separada), onde outerWidth/outerHeight não mudam:
-  // o preview do objeto só é calculado quando o painel do console está de fato renderizando
-  let probeAccessed = false;
-  const probe = new Image();
-  Object.defineProperty(probe, 'id', {
-    get() {
-      probeAccessed = true;
-      return '';
-    },
-  });
-
-  setInterval(() => {
-    probeAccessed = false;
-    console.log(probe);
-
-    if (isSizeDiffOpen() || probeAccessed) {
-      showMessage();
-    } else {
-      shown = false;
-    }
-  }, 1000);
-})();
+DisableDevtool({
+  url: 'https://letmegooglethat.com/?q=are+you+studid%3F',
+});
