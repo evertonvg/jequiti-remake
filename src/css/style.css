@@ -121,3 +121,18 @@ body {
 .hypnosis__easter-egg-filter--active {
   opacity: 1;
 }
+
+.hypnosis__idle {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  display: none;
+  background: #000;
+  z-index: 4;
+}
+
+.hypnosis__idle--active {
+  display: block;
+}

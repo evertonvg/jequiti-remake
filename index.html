@@ -35,8 +35,9 @@
        vídeo do Jeff toca).
     3) Abrir o DevTools — deixa uma mensagem no console.
     4) Ficar parado sem interagir (mouse, teclado, toque ou scroll)
-       por um tempo — em qualquer modo — toca o vídeo "universal",
-       com interações e áudio desativados enquanto ele toca.
+       por um tempo — em qualquer modo — entra em standby com o
+       vídeo do DVD quicando pelos cantos, em loop, mudo. Some ao
+       apertar qualquer tecla.
        [tempo de teste: 10s — trocar para 120000ms depois de validar]
   -->
 
@@ -80,6 +81,22 @@
 
     <video class="hypnosis__easter-egg" id="hypnosisEasterEgg" playsinline></video>
     <div class="hypnosis__easter-egg-filter" id="hypnosisEasterEggFilter"></div>
+
+    <video class="hypnosis__idle" id="hypnosisIdle" src="src/video/dvd.mp4" loop muted playsinline aria-label="Vídeo em modo inativo com animação do DVD">
+      <track
+        kind="captions"
+        srclang="pt"
+        label="Português"
+        default
+        src="data:text/vtt;charset=utf-8,%23%20WebVTT%0A%0A00:00:00.000%20--%3E%2000:00:10.000%0A%3C%20v%20Voice%3E%20Modo%20inativo%3A%20o%20DVD%20quica%20pelos%20cantos%20em%20loop.%0A"
+      >
+      <track
+        kind="descriptions"
+        srclang="pt"
+        label="Descrição"
+        src="data:text/vtt;charset=utf-8,%23%20WebVTT%0A%0A00:00:00.000%20--%3E%2000:00:10.000%0A%20%20O%20DVD%20quica%20pelos%20cantos%20da%20tela%20em%20um%20loop%20silencioso%20de%20espera.%0A"
+      >
+    </video>
   </div>
 
   <audio id="hypnosisAudio" src="src/audio/siren-head-sounds-new.mp3" loop preload="auto"></audio>
