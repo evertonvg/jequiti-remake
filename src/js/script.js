@@ -21,6 +21,7 @@ class HypnosisBall {
     horrorEasterEggSrc,
     keyMashSrc,
     horrorKeyMashSrc,
+    idleSrc,
     maxFlashDelayMs = 30000,
     flashDurationMs = 80,
     rickrollChance = 0.1,
@@ -31,6 +32,7 @@ class HypnosisBall {
     maxVolume = 0.8,
     keyMashThreshold = 20,
     keyMashWindowMs = 5000,
+    idleMs = 10000, // TODO: 120000 (2 minutos) depois de testar
   }) {
     this.ball = ballEl;
     this.flash = flashEl;
@@ -47,6 +49,7 @@ class HypnosisBall {
     this.horrorEasterEggSrc = horrorEasterEggSrc;
     this.keyMashSrc = keyMashSrc;
     this.horrorKeyMashSrc = horrorKeyMashSrc;
+    this.idleSrc = idleSrc;
     this.maxFlashDelayMs = maxFlashDelayMs;
     this.flashDurationMs = flashDurationMs;
     this.rickrollChance = rickrollChance;
@@ -57,6 +60,7 @@ class HypnosisBall {
     this.maxVolume = maxVolume;
     this.keyMashThreshold = keyMashThreshold;
     this.keyMashWindowMs = keyMashWindowMs;
+    this.idleMs = idleMs;
 
     this.angle = 0;
     this.transition = 0;
@@ -65,8 +69,10 @@ class HypnosisBall {
     this.lastFrameTime = null;
     this.easterEggActive = false;
     this.keyMashActive = false;
+    this.idleActive = false;
     this.konamiBuffer = [];
     this.keyMashTimestamps = [];
+    this.idleTimeoutId = null;
   }
 
   start() {
@@ -76,15 +82,20 @@ class HypnosisBall {
     });
     document.addEventListener('keydown', (event) => this.onKeydown(event));
 
+    ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'].forEach((type) => {
+      document.addEventListener(type, () => this.resetIdleTimer());
+    });
+
     this.rickroll.muted = true;
     this.rickroll.play().catch(() => {});
 
     this.scheduleNextFlash();
+    this.resetIdleTimer();
     requestAnimationFrame((time) => this.tick(time));
   }
 
   isInteractionSuspended() {
-    return this.easterEggActive || this.keyMashActive;
+    return this.easterEggActive || this.keyMashActive || this.idleActive;
   }
 
   onKeydown(event) {
@@ -99,6 +110,28 @@ class HypnosisBall {
     }
 
     this.trackKeyMash();
+  }
+
+  resetIdleTimer() {
+    clearTimeout(this.idleTimeoutId);
+    if (this.isInteractionSuspended()) return;
+    this.idleTimeoutId = setTimeout(() => this.triggerIdleEffect(), this.idleMs);
+  }
+
+  triggerIdleEffect() {
+    if (this.isInteractionSuspended()) return;
+    this.idleActive = true;
+
+    const wasSirenPlaying = !this.audio.paused;
+    this.audio.pause();
+
+    this.playFullscreenVideo(this.idleSrc).then(() => {
+      this.idleActive = false;
+      if (wasSirenPlaying) {
+        this.audio.play().catch(() => {});
+      }
+      this.resetIdleTimer();
+    });
   }
 
   trackKeyMash() {
@@ -142,6 +175,7 @@ class HypnosisBall {
     this.playFullscreenVideo(isHorrorVideo ? this.horrorEasterEggSrc : this.normalEasterEggSrc).then(() => {
       this.easterEggFilter.classList.remove('hypnosis__easter-egg-filter--active');
       this.easterEggActive = false;
+      this.resetIdleTimer();
     });
   }
 
@@ -165,6 +199,7 @@ class HypnosisBall {
         if (isHorrorVideo) {
           this.audio.play().catch(() => {});
         }
+        this.resetIdleTimer();
       });
     };
     this.blackout.addEventListener('transitionend', onFadeEnd);
@@ -263,6 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
     horrorEasterEggSrc: 'src/video/illuminatti.mp4',
     keyMashSrc: 'src/video/skyrim.mp4',
     horrorKeyMashSrc: 'src/video/jeff.mp4',
+    idleSrc: 'src/video/universal.mp4',
   }).start();
 });
 
