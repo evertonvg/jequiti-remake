@@ -52,7 +52,8 @@ import SecretTerminal from '../components/SecretTerminal.astro';
        terminal secreto perguntando "What is the meaning of life?".
        Resposta certa ("DVD") toca o som de shutdown do Windows;
        qualquer outra resposta não toca nada. O terminal fecha em
-       ambos os casos.
+       ambos os casos. Acertando, a bola encolhe e passa a poder
+       ser arrastada pela tela (continua girando).
   -->
 
   <div class="hypnosis">
@@ -82,7 +83,7 @@ import SecretTerminal from '../components/SecretTerminal.astro';
     </video>
 
     <div class="hypnosis__stage">
-      <img class="hypnosis__ball" id="hypnosisBall" src={withBase('img/ball.png')} alt="">
+      <img class="hypnosis__ball" id="hypnosisBall" src={withBase('img/ball.png')} alt="" draggable="false">
 
       <div class="hypnosis__flash" id="hypnosisFlash">
         <img class="hypnosis__flash-image" id="hypnosisFlashImage" src={withBase('img/jequiti.webp')} alt="">

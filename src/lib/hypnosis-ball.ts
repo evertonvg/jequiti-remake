@@ -15,6 +15,7 @@ export interface SecretTerminalToggleDetail {
 declare global {
   interface WindowEventMap {
     'hypnosis:secret-word': CustomEvent<void>;
+    'hypnosis:unlock-drag': CustomEvent<void>;
     'secret-terminal:toggle': CustomEvent<SecretTerminalToggleDetail>;
   }
 }
@@ -117,6 +118,17 @@ export class HypnosisBall {
   private pendingClickTimeoutId: ReturnType<typeof setTimeout> | undefined;
   private clickCount = 0;
 
+  private dragUnlocked = false;
+  private isDragging = false;
+  private dragMoved = false;
+  private suppressNextClick = false;
+  private dragOffsetX = 0;
+  private dragOffsetY = 0;
+  private dragStartClientX = 0;
+  private dragStartClientY = 0;
+  private dragStartOffsetX = 0;
+  private dragStartOffsetY = 0;
+
   constructor({
     ballEl,
     flashEl,
@@ -207,6 +219,8 @@ export class HypnosisBall {
       }
     });
 
+    window.addEventListener('hypnosis:unlock-drag', () => this.unlockDrag());
+
     this.rickroll.muted = true;
     this.rickroll.play().catch(() => {});
 
@@ -220,6 +234,10 @@ export class HypnosisBall {
   }
 
   private onClick(): void {
+    if (this.suppressNextClick) {
+      this.suppressNextClick = false;
+      return;
+    }
     if (this.isInteractionSuspended()) return;
 
     this.clickCount += 1;
@@ -431,7 +449,7 @@ export class HypnosisBall {
 
     const speed = this.normalSpeedDeg * (1 - 2 * this.transition) * (1 - this.angelicalTransition);
     this.angle = (this.angle + speed * (dt / 1000)) % 360;
-    this.ball.style.transform = `rotate(${this.angle}deg)`;
+    this.ball.style.transform = `translate(${this.dragOffsetX}px, ${this.dragOffsetY}px) rotate(${this.angle}deg)`;
 
     this.overlay.style.opacity = String(this.transition * this.maxOverlayOpacity);
     this.audio.volume = this.transition * this.maxVolume;
@@ -485,5 +503,55 @@ export class HypnosisBall {
       this.rickroll.classList.remove('hypnosis__rickroll--visible');
       this.scheduleNextFlash();
     }, this.rickrollRevealMs);
+  }
+
+  private unlockDrag(): void {
+    if (this.dragUnlocked) return;
+    this.dragUnlocked = true;
+
+    this.ball.classList.add('hypnosis__ball--draggable');
+    this.ball.addEventListener('pointerdown', (event) => this.onBallPointerDown(event));
+    window.addEventListener('pointermove', (event) => this.onBallPointerMove(event));
+    window.addEventListener('pointerup', (event) => this.onBallPointerUp(event));
+    window.addEventListener('pointercancel', (event) => this.onBallPointerUp(event));
+  }
+
+  private onBallPointerDown(event: PointerEvent): void {
+    if (this.isInteractionSuspended()) return;
+
+    event.preventDefault();
+    this.isDragging = true;
+    this.dragMoved = false;
+    this.ball.setPointerCapture(event.pointerId);
+    this.ball.classList.add('hypnosis__ball--dragging');
+    this.dragStartClientX = event.clientX;
+    this.dragStartClientY = event.clientY;
+    this.dragStartOffsetX = this.dragOffsetX;
+    this.dragStartOffsetY = this.dragOffsetY;
+  }
+
+  private onBallPointerMove(event: PointerEvent): void {
+    if (!this.isDragging) return;
+
+    const dx = event.clientX - this.dragStartClientX;
+    const dy = event.clientY - this.dragStartClientY;
+    if (!this.dragMoved && Math.hypot(dx, dy) > 4) {
+      this.dragMoved = true;
+    }
+    this.dragOffsetX = this.dragStartOffsetX + dx;
+    this.dragOffsetY = this.dragStartOffsetY + dy;
+  }
+
+  private onBallPointerUp(event: PointerEvent): void {
+    if (!this.isDragging) return;
+
+    this.isDragging = false;
+    this.ball.classList.remove('hypnosis__ball--dragging');
+    if (this.ball.hasPointerCapture(event.pointerId)) {
+      this.ball.releasePointerCapture(event.pointerId);
+    }
+    if (this.dragMoved) {
+      this.suppressNextClick = true;
+    }
   }
 }

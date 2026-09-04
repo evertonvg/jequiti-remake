@@ -51,6 +51,16 @@ body {
   display: none;
 }
 
+.hypnosis__ball--draggable {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.hypnosis__ball--dragging {
+  cursor: grabbing;
+}
+
 .hypnosis__flash {
   position: absolute;
   inset: 0;
