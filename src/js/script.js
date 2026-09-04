@@ -101,10 +101,13 @@ class HypnosisBall {
     idleCanvasEl,
     normalImages,
     horrorImages,
+    heavenImages,
     normalEasterEggSrc,
     horrorEasterEggSrc,
+    angelicalEasterEggSrc,
     keyMashSrc,
     horrorKeyMashSrc,
+    angelicalKeyMashSrc,
     maxFlashDelayMs = 30000,
     flashDurationMs = 80,
     rickrollChance = 0.1,
@@ -135,10 +138,13 @@ class HypnosisBall {
     this.idleScreensaver = new DvdScreensaver(idleCanvasEl);
     this.normalImages = normalImages;
     this.horrorImages = horrorImages;
+    this.heavenImages = heavenImages;
     this.normalEasterEggSrc = normalEasterEggSrc;
     this.horrorEasterEggSrc = horrorEasterEggSrc;
+    this.angelicalEasterEggSrc = angelicalEasterEggSrc;
     this.keyMashSrc = keyMashSrc;
     this.horrorKeyMashSrc = horrorKeyMashSrc;
+    this.angelicalKeyMashSrc = angelicalKeyMashSrc;
     this.maxFlashDelayMs = maxFlashDelayMs;
     this.flashDurationMs = flashDurationMs;
     this.rickrollChance = rickrollChance;
@@ -292,13 +298,25 @@ class HypnosisBall {
     this.easterEggActive = true;
 
     const isHorrorVideo = this.horror;
+    const isAngelicalVideo = this.angelical;
     if (isHorrorVideo) {
       this.easterEggFilter.classList.add('hypnosis__easter-egg-filter--active');
+    } else if (isAngelicalVideo) {
+      this.angelicalAudio.pause();
     }
 
-    this.playFullscreenVideo(isHorrorVideo ? this.horrorEasterEggSrc : this.normalEasterEggSrc).then(() => {
+    const src = isHorrorVideo
+      ? this.horrorEasterEggSrc
+      : isAngelicalVideo
+        ? this.angelicalEasterEggSrc
+        : this.normalEasterEggSrc;
+
+    this.playFullscreenVideo(src).then(() => {
       this.easterEggFilter.classList.remove('hypnosis__easter-egg-filter--active');
       this.easterEggActive = false;
+      if (isAngelicalVideo) {
+        this.angelicalAudio.play().catch(() => {});
+      }
       this.resetIdleTimer();
     });
   }
@@ -309,19 +327,30 @@ class HypnosisBall {
     this.blackout.classList.add('hypnosis__blackout--active');
 
     const isHorrorVideo = this.horror;
+    const isAngelicalVideo = this.angelical;
     if (isHorrorVideo) {
       this.audio.pause();
+    } else if (isAngelicalVideo) {
+      this.angelicalAudio.pause();
     }
+
+    const src = isHorrorVideo
+      ? this.horrorKeyMashSrc
+      : isAngelicalVideo
+        ? this.angelicalKeyMashSrc
+        : this.keyMashSrc;
 
     const onFadeEnd = (event) => {
       if (event.propertyName !== 'opacity' || event.target !== this.blackout) return;
       this.blackout.removeEventListener('transitionend', onFadeEnd);
 
-      this.playFullscreenVideo(isHorrorVideo ? this.horrorKeyMashSrc : this.keyMashSrc).then(() => {
+      this.playFullscreenVideo(src).then(() => {
         this.blackout.classList.remove('hypnosis__blackout--active');
         this.keyMashActive = false;
         if (isHorrorVideo) {
           this.audio.play().catch(() => {});
+        } else if (isAngelicalVideo) {
+          this.angelicalAudio.play().catch(() => {});
         }
         this.resetIdleTimer();
       });
@@ -403,7 +432,11 @@ class HypnosisBall {
       return;
     }
 
-    const pool = this.horror ? this.horrorImages : this.normalImages;
+    const pool = this.horror
+      ? this.horrorImages
+      : this.angelical
+        ? this.heavenImages
+        : this.normalImages;
     this.flashImage.src = pool[Math.floor(Math.random() * pool.length)];
 
     this.ball.classList.add('hypnosis__ball--hidden');
@@ -447,10 +480,19 @@ document.addEventListener('DOMContentLoaded', () => {
       'src/img/horror/3.jpg',
       'src/img/horror/4.jpg',
     ],
+    heavenImages: [
+      'src/img/heaven/4d2284a7de8184b18e7287cbeb07b7ac.jpg',
+      'src/img/heaven/Confused-jesus-meme-4.jpg',
+      'src/img/heaven/ecce-mono-jesus-ReproducaoInstagram.jpg.webp',
+      'src/img/heaven/images.jpg',
+      'src/img/heaven/jesus-watcha-doin-meme-xqbc6.jpg',
+    ],
     normalEasterEggSrc: 'src/video/ronaldinhosoccer.mp4',
     horrorEasterEggSrc: 'src/video/illuminatti.mp4',
+    angelicalEasterEggSrc: 'src/video/jesus-come.mp4',
     keyMashSrc: 'src/video/skyrim.mp4',
     horrorKeyMashSrc: 'src/video/jeff.mp4',
+    angelicalKeyMashSrc: 'src/video/jesus-jumpscare.mp4',
   }).start();
 });
 
