@@ -92,6 +92,8 @@ class HypnosisBall {
     flashImageEl,
     overlayEl,
     audioEl,
+    angelicalOverlayEl,
+    angelicalAudioEl,
     rickrollEl,
     easterEggEl,
     easterEggFilterEl,
@@ -111,15 +113,20 @@ class HypnosisBall {
     transitionMs = 5000,
     maxOverlayOpacity = 0.75,
     maxVolume = 0.8,
+    maxAngelicalOverlayOpacity = 0.85,
+    maxAngelicalVolume = 0.7,
     keyMashThreshold = 20,
     keyMashWindowMs = 5000,
     idleMs = 120000,
+    doubleClickWindowMs = 250,
   }) {
     this.ball = ballEl;
     this.flash = flashEl;
     this.flashImage = flashImageEl;
     this.overlay = overlayEl;
     this.audio = audioEl;
+    this.angelicalOverlay = angelicalOverlayEl;
+    this.angelicalAudio = angelicalAudioEl;
     this.rickroll = rickrollEl;
     this.easterEgg = easterEggEl;
     this.easterEggFilter = easterEggFilterEl;
@@ -140,14 +147,20 @@ class HypnosisBall {
     this.transitionMs = transitionMs;
     this.maxOverlayOpacity = maxOverlayOpacity;
     this.maxVolume = maxVolume;
+    this.maxAngelicalOverlayOpacity = maxAngelicalOverlayOpacity;
+    this.maxAngelicalVolume = maxAngelicalVolume;
     this.keyMashThreshold = keyMashThreshold;
     this.keyMashWindowMs = keyMashWindowMs;
     this.idleMs = idleMs;
+    this.doubleClickWindowMs = doubleClickWindowMs;
 
     this.angle = 0;
     this.transition = 0;
     this.target = 0;
     this.horror = false;
+    this.angelicalTransition = 0;
+    this.angelicalTarget = 0;
+    this.angelical = false;
     this.lastFrameTime = null;
     this.easterEggActive = false;
     this.keyMashActive = false;
@@ -156,13 +169,12 @@ class HypnosisBall {
     this.konamiBuffer = [];
     this.keyMashTimestamps = [];
     this.idleTimeoutId = null;
+    this.pendingClickTimeoutId = null;
+    this.clickCount = 0;
   }
 
   start() {
-    document.addEventListener('click', () => {
-      if (this.isInteractionSuspended()) return;
-      this.toggleHorror();
-    });
+    document.addEventListener('click', () => this.onClick());
     document.addEventListener('keydown', (event) => this.onKeydown(event));
 
     ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'].forEach((type) => {
@@ -179,6 +191,23 @@ class HypnosisBall {
 
   isInteractionSuspended() {
     return this.easterEggActive || this.keyMashActive || this.idleActive;
+  }
+
+  onClick() {
+    if (this.isInteractionSuspended()) return;
+
+    this.clickCount += 1;
+
+    if (this.clickCount === 1) {
+      this.pendingClickTimeoutId = setTimeout(() => {
+        this.clickCount = 0;
+        this.toggleHorror();
+      }, this.doubleClickWindowMs);
+    } else {
+      clearTimeout(this.pendingClickTimeoutId);
+      this.clickCount = 0;
+      this.toggleAngelical();
+    }
   }
 
   onKeydown(event) {
@@ -305,7 +334,20 @@ class HypnosisBall {
     this.target = this.horror ? 1 : 0;
 
     if (this.horror) {
+      this.angelical = false;
+      this.angelicalTarget = 0;
       this.audio.play().catch(() => {});
+    }
+  }
+
+  toggleAngelical() {
+    this.angelical = !this.angelical;
+    this.angelicalTarget = this.angelical ? 1 : 0;
+
+    if (this.angelical) {
+      this.horror = false;
+      this.target = 0;
+      this.angelicalAudio.play().catch(() => {});
     }
   }
 
@@ -323,7 +365,13 @@ class HypnosisBall {
       this.transition = Math.max(this.target, this.transition - step);
     }
 
-    const speed = this.normalSpeedDeg * (1 - 2 * this.transition);
+    if (this.angelicalTransition < this.angelicalTarget) {
+      this.angelicalTransition = Math.min(this.angelicalTarget, this.angelicalTransition + step);
+    } else if (this.angelicalTransition > this.angelicalTarget) {
+      this.angelicalTransition = Math.max(this.angelicalTarget, this.angelicalTransition - step);
+    }
+
+    const speed = this.normalSpeedDeg * (1 - 2 * this.transition) * (1 - this.angelicalTransition);
     this.angle = (this.angle + speed * (dt / 1000)) % 360;
     this.ball.style.transform = `rotate(${this.angle}deg)`;
 
@@ -332,6 +380,13 @@ class HypnosisBall {
 
     if (this.transition === 0 && !this.horror && !this.audio.paused) {
       this.audio.pause();
+    }
+
+    this.angelicalOverlay.style.opacity = this.angelicalTransition * this.maxAngelicalOverlayOpacity;
+    this.angelicalAudio.volume = this.angelicalTransition * this.maxAngelicalVolume;
+
+    if (this.angelicalTransition === 0 && !this.angelical && !this.angelicalAudio.paused) {
+      this.angelicalAudio.pause();
     }
 
     requestAnimationFrame((nextTime) => this.tick(nextTime));
@@ -378,6 +433,8 @@ document.addEventListener('DOMContentLoaded', () => {
     flashImageEl: document.getElementById('hypnosisFlashImage'),
     overlayEl: document.getElementById('hypnosisOverlay'),
     audioEl: document.getElementById('hypnosisAudio'),
+    angelicalOverlayEl: document.getElementById('hypnosisAngelicalOverlay'),
+    angelicalAudioEl: document.getElementById('hypnosisAngelicalAudio'),
     rickrollEl: document.getElementById('hypnosisRickroll'),
     easterEggEl: document.getElementById('hypnosisEasterEgg'),
     easterEggFilterEl: document.getElementById('hypnosisEasterEggFilter'),

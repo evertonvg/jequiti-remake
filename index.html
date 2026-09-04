@@ -38,6 +38,9 @@
        por 2 minutos — em qualquer modo — entra em standby com a
        animação (canvas) do logo DVD quicando pelos cantos, trocando
        de cor a cada batida. Some ao apertar qualquer tecla.
+    5) Clique duplo — tema angelical: filtro azul, bola parada e
+       música angelical.mp3 em loop (substitui o modo vermelho, se
+       estiver ativo).
   -->
 
   <div class="hypnosis">
@@ -76,6 +79,8 @@
 
     <div class="hypnosis__overlay" id="hypnosisOverlay"></div>
 
+    <div class="hypnosis__angelical-overlay" id="hypnosisAngelicalOverlay"></div>
+
     <div class="hypnosis__blackout" id="hypnosisBlackout"></div>
 
     <video class="hypnosis__easter-egg" id="hypnosisEasterEgg" playsinline></video>
@@ -85,6 +90,7 @@
   </div>
 
   <audio id="hypnosisAudio" src="src/audio/siren-head-sounds-new.mp3" loop preload="auto"></audio>
+  <audio id="hypnosisAngelicalAudio" src="src/audio/angelical.mp3" loop preload="auto"></audio>
 
   <script src="src/js/script.js"></script>
 </body>

@@ -79,6 +79,16 @@ body {
   z-index: 2;
 }
 
+.hypnosis__angelical-overlay {
+  position: fixed;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at center, rgba(190, 225, 255, 0.9) 0%, rgba(140, 190, 255, 0.6) 100%);
+  mix-blend-mode: screen;
+  z-index: 2;
+}
+
 .hypnosis__blackout {
   position: fixed;
   inset: 0;
