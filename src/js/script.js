@@ -265,3 +265,26 @@ document.addEventListener('DOMContentLoaded', () => {
     horrorKeyMashSrc: 'src/video/jeff.mp4',
   }).start();
 });
+
+(() => {
+  const THRESHOLD = 160;
+  let shown = false;
+
+  const isDevToolsOpen = () =>
+    window.outerWidth - window.innerWidth > THRESHOLD ||
+    window.outerHeight - window.innerHeight > THRESHOLD;
+
+  setInterval(() => {
+    if (isDevToolsOpen()) {
+      if (shown) return;
+      shown = true;
+      console.log('%cmensagem para você:', 'font-size: 20px; font-weight: bold;');
+      console.log(
+        '%c ',
+        'font-size: 1px; padding: 100px 150px; background: url(src/img/jesus.jpg) no-repeat center / contain;'
+      );
+    } else {
+      shown = false;
+    }
+  }, 1000);
+})();
